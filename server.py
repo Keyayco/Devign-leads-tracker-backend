@@ -70,10 +70,13 @@ missing = [k for k, v in [
     ("SUPABASE_URL", SUPABASE_URL),
     ("SUPABASE_SERVICE_ROLE_KEY", SUPABASE_KEY),
     ("SUPABASE_JWT_SECRET", JWT_SECRET),
-    ("PORTAL_API_KEY", PORTAL_API_KEY),
 ] if not v]
+
 if missing:
     raise RuntimeError(f"Missing required env vars: {', '.join(missing)}")
+
+if not PORTAL_API_KEY:
+    logger.warning("PORTAL_API_KEY not set — client portal integration disabled")
 
 
 # =========================================
