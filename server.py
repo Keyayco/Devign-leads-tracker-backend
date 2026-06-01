@@ -804,7 +804,15 @@ def stats():
 
         # FIXED: Use count_gte for proper date filtering
         since = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
-        stats["recent_activity_7d"] = count_gte("lead_activities", "created_at", since)
+        try:
+    stats["recent_activity_7d"] = count_gte(
+        "lead_activities",
+        "created_at",
+        since
+    )
+except Exception as e:
+    slog("ERROR", "recent_activity_7d failed", error=str(e))
+    stats["recent_activity_7d"] = 0 since)
 
         if g.user_role == 'rep':
             mine = [l for l in leads if l.get('claimed_by') == g.user_id]
