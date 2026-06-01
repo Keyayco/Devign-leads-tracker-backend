@@ -2,6 +2,7 @@ services:
   - type: web
     name: lead-tracker-api
     runtime: python
+    pythonVersion: 3.11.9
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn server:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 60
