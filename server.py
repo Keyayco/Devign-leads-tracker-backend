@@ -75,8 +75,7 @@ missing = [k for k, v in [
 if missing:
     raise RuntimeError(f"Missing required env vars: {', '.join(missing)}")
 
-if not PORTAL_API_KEY:
-    logger.warning("PORTAL_API_KEY not set — client portal integration disabled")
+
 
 
 # =========================================
@@ -105,6 +104,8 @@ handler.setFormatter(StructuredLogFormatter())
 logger = logging.getLogger(__name__)
 logger.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
 logger.addHandler(handler)
+if not PORTAL_API_KEY:
+    logger.warning("PORTAL_API_KEY not set — client portal integration disabled")
 
 def slog(level, message, **extras):
     """Emit structured log with request context."""
