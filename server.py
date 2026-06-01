@@ -303,16 +303,29 @@ def get_token():
         return h.split(' ', 1)[1]
     return None
 
-def decode_jwt(tok):
-    if not tok:
+def decode_jwt(token):
+    if not token:
         return False, "No token"
+
     try:
-        payload = jwt.decode(tok, JWT_SECRET, algorithms=['HS256'], audience='authenticated')
+        signing_key = jwks_client.get_signing_key_from_jwt(token).key
+
+        payload = jwt.decode(
+            token,
+            signing_key,
+            algorithms=["RS256"],
+            options={
+                "verify_aud": False
+            }
+        )
+
         return True, payload
+
     except jwt.ExpiredSignatureError:
         return False, "Token expired"
+
     except jwt.InvalidTokenError as e:
-        return False, f"Invalid token: {e}"
+        return False, f"Invalid token: {str(e)}"
 
 def get_profile(uid):
     try:
