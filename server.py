@@ -786,6 +786,7 @@ def activities(lid):
 def stats():
     try:
         leads = get_db().table("leads").select("status,claimed_by,priority").execute().data or []
+
         total = len(leads)
         claimed = sum(1 for l in leads if l.get('claimed_by'))
 
@@ -802,21 +803,25 @@ def stats():
             "high_priority": sum(1 for l in leads if l.get('priority') == 'high'),
         }
 
-        # Recent activity count
+        # last 7 days activity
         since = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
 
         try:
-            stats["recent_activity_7d"] = count_gte(
-                "lead_activities",
-                "created_at",
-                since
+            stats["recent_activity_7d"] = (
+                get_db()
+                .table("lead_activities")
+                .gte("created_at", since)
+                .execute()
+                .count or 0
             )
         except Exception as e:
             slog("ERROR", "recent_activity_7d failed", error=str(e))
             stats["recent_activity_7d"] = 0
 
-        if g.user_role == 'rep':
+        # rep-only stats
+        if getattr(g, "user_role", None) == 'rep':
             mine = [l for l in leads if l.get('claimed_by') == g.user_id]
+
             stats.update({
                 "my_claimed": len(mine),
                 "my_won": sum(1 for l in mine if l.get('status') == 'closed_won'),
