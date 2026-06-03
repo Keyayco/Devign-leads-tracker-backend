@@ -309,23 +309,14 @@ def decode_jwt(token):
         return False, "No token"
 
     try:
-        signing_key = jwks_client.get_signing_key_from_jwt(token).key
+        user = supabase.auth.get_user(token)
 
-        payload = jwt.decode(
-            token,
-            signing_key,
-            algorithms=["RS256"],
-            options={
-                "verify_aud": False
-            }
-        )
+        if not user or not user.user:
+            return False, "Invalid token"
 
-        return True, payload
+        return True, user.user
 
-    except jwt.ExpiredSignatureError:
-        return False, "Token expired"
-
-    except jwt.InvalidTokenError as e:
+    except Exception as e:
         return False, f"Invalid token: {str(e)}"
 
 def get_profile(uid):
