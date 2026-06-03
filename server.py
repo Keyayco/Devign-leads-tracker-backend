@@ -807,21 +807,18 @@ def stats():
         since = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
 
         try:
-            stats["recent_activity_7d"] = (
-                get_db()
-                .table("lead_activities")
-                .gte("created_at", since)
-                .execute()
-                .count or 0
+            stats["recent_activity_7d"] = count_gte(
+                "lead_activities",
+                "created_at",
+                since
             )
         except Exception as e:
             slog("ERROR", "recent_activity_7d failed", error=str(e))
             stats["recent_activity_7d"] = 0
 
         # rep-only stats
-        if getattr(g, "user_role", None) == 'rep':
+        if g.user_role == 'rep':
             mine = [l for l in leads if l.get('claimed_by') == g.user_id]
-
             stats.update({
                 "my_claimed": len(mine),
                 "my_won": sum(1 for l in mine if l.get('status') == 'closed_won'),
