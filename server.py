@@ -25,7 +25,6 @@ import os
 import re
 import jwt
 import uuid
-import logging
 import time
 from functools import wraps
 from datetime import datetime, timezone, timedelta
@@ -33,6 +32,8 @@ from dotenv import load_dotenv
 from flask import Flask, request, g, jsonify, make_response
 from flask_cors import CORS
 from supabase import create_client
+import logging
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 
@@ -1009,22 +1010,22 @@ def portal():
 # =========================================
 # ERROR HANDLERS
 # =========================================
-@app.errorhandler(404)
-def e404(e):
-    if request.path.startswith('/api/'):
-        return fail("Endpoint not found", 404)
-    return jsonify({"error": "Not found"}), 404
-
-@app.errorhandler(500)
-def e500(e):
-    slog("ERROR", "Internal server error", error=str(e))
-    return fail("Internal server error", 500)
+import traceback
 
 @app.errorhandler(Exception)
 def exc(e):
-    slog("ERROR", "Unhandled exception", error=str(e))
+    tb = traceback.format_exc()
+
+    slog("ERROR", "Unhandled exception", error=str(e), traceback=tb)
+
+    print("\n🔥 FULL TRACEBACK:\n", tb)
+
     if request.path.startswith('/api/'):
-        return fail("An unexpected error occurred", 500)
+        return jsonify({
+            "error": "Internal server error",
+            "details": str(e)
+        }), 500
+
     raise e
 
 # =========================================
