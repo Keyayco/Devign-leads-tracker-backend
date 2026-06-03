@@ -299,11 +299,18 @@ def sanitize_search(term):
 # AUTH
 # =========================================
 def get_token():
-    h = request.headers.get('Authorization', '')
-    if h.startswith('Bearer '):
-        return h.split(' ', 1)[1]
-    return None
+    print("HEADERS:", dict(request.headers))
+    auth = request.headers.get("Authorization")
+    print("AUTH HEADER:", auth)
 
+    if not auth:
+        return None
+
+    parts = auth.split(" ")
+    if len(parts) != 2:
+        return None
+
+    return parts[1]
 def decode_jwt(token):
     if not token:
         return False, "No token"
