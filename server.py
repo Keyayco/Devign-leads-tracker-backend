@@ -802,14 +802,18 @@ def stats():
             "high_priority": sum(1 for l in leads if l.get('priority') == 'high'),
         }
 
-        # FIXED: Use count_gte for proper date filtering
+        # Recent activity count
         since = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+
         try:
-    since = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
-stats["recent_activity_7d"] = count_gte("lead_activities", "created_at", since)
-except Exception as e:
-    slog("ERROR", "recent_activity_7d failed", error=str(e))
-    stats["recent_activity_7d"] = 0 since)
+            stats["recent_activity_7d"] = count_gte(
+                "lead_activities",
+                "created_at",
+                since
+            )
+        except Exception as e:
+            slog("ERROR", "recent_activity_7d failed", error=str(e))
+            stats["recent_activity_7d"] = 0
 
         if g.user_role == 'rep':
             mine = [l for l in leads if l.get('claimed_by') == g.user_id]
@@ -820,10 +824,10 @@ except Exception as e:
             })
 
         return ok(stats, "Dashboard stats retrieved")
+
     except Exception as e:
         slog("ERROR", "stats failed", error=str(e))
         return fail("Failed to retrieve stats", 500)
-
 
 @app.route('/api/reps', methods=['GET'])
 @app.route('/api/v1/reps', methods=['GET'])
