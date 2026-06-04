@@ -345,24 +345,50 @@ def auth(f):
     @wraps(f)
     def wrap(*a, **kw):
         tok = get_token()
+
+        print("TOKEN FOUND:", bool(tok))
+
         if not tok:
+            print("FAIL: No token")
             return fail("Authentication required", 401)
+
         ok_, pl = decode_jwt(tok)
+
+        print("DECODE:", ok_, pl)
+
         if not ok_:
+            print("FAIL: Decode failed")
             return fail(pl, 401)
+
         uid = pl.get('sub')
+
+        print("UID:", uid)
+
         if not uid:
+            print("FAIL: No user ID")
             return fail("Invalid token: no user ID", 401)
+
         prof = get_profile(uid)
+
+        print("PROFILE:", prof)
+
         if not prof:
+            print("FAIL: Profile not found")
             return fail("User profile not found", 401)
+
         if not prof.get('is_active', True):
+            print("FAIL: Account deactivated")
             return fail("Account deactivated", 403)
+
         g.user_id = uid
         g.user_email = pl.get('email', '')
         g.user_role = prof.get('role', 'rep')
         g.user_profile = prof
+
+        print("AUTH SUCCESS")
+
         return f(*a, **kw)
+
     return wrap
 
 def admin_only(f):
