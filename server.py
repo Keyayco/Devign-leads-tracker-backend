@@ -316,12 +316,20 @@ def decode_jwt(token):
         return False, "No token"
 
     try:
-        user = supabase.auth.get_user(token)
+        user_res = get_db().auth.get_user(token)
 
-        if not user or not user.user:
+        if not user_res or not user_res.user:
             return False, "Invalid token"
 
-        return True, user.user
+        user = user_res.user
+
+        payload = {
+            "sub": user.id,
+            "email": user.email,
+            "raw": user
+        }
+
+        return True, payload
 
     except Exception as e:
         return False, f"Invalid token: {str(e)}"
