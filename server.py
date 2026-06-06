@@ -31,6 +31,7 @@ from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from flask import Flask, request, g, jsonify, make_response
 from flask_cors import CORS
+import supabase
 from supabase import create_client
 import logging
 logging.basicConfig(level=logging.INFO)
