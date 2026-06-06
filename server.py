@@ -34,6 +34,11 @@ from flask_cors import CORS
 from supabase import create_client
 import logging
 logging.basicConfig(level=logging.INFO)
+import traceback
+import httpx
+
+print("SUPABASE VERSION:", getattr(supabase, "__version__", "unknown"))
+print("HTTPX VERSION:", httpx.__version__)
 
 load_dotenv()
 
@@ -298,30 +303,39 @@ def sanitize_search(term):
 # =========================================
 # AUTH
 # =========================================
-def get_token():
-    print("HEADERS:", dict(request.headers))
-    auth = request.headers.get("Authorization")
-    print("AUTH HEADER:", auth)
 
-    if not auth:
-        return None
-
-    parts = auth.split(" ")
-    if len(parts) != 2:
-        return None
-
-    return parts[1]
 def decode_jwt(token):
     if not token:
         return False, "No token"
 
     try:
-        user_res = get_db().auth.get_user(token)
+        print("========== DECODE START ==========")
+        print("TOKEN LENGTH:", len(token))
 
-        if not user_res or not user_res.user:
+        db = get_db()
+
+        print("SUPABASE CLIENT CREATED")
+
+        auth_client = db.auth
+
+        print("AUTH CLIENT CREATED")
+
+        user_res = auth_client.get_user(token)
+
+        print("GET USER SUCCESS")
+
+        if not user_res:
+            print("NO USER RESPONSE")
+            return False, "Invalid token"
+
+        if not user_res.user:
+            print("NO USER FOUND")
             return False, "Invalid token"
 
         user = user_res.user
+
+        print("USER ID:", user.id)
+        print("USER EMAIL:", user.email)
 
         payload = {
             "sub": user.id,
@@ -329,11 +343,18 @@ def decode_jwt(token):
             "raw": user
         }
 
+        print("========== DECODE SUCCESS ==========")
+
         return True, payload
 
     except Exception as e:
-        return False, f"Invalid token: {str(e)}"
+        print("========== DECODE ERROR ==========")
+        traceback.print_exc()
+        print("ERROR TYPE:", type(e))
+        print("ERROR:", str(e))
+        print("========== END ERROR ==========")
 
+        return False, f"Invalid token: {str(e)}"
 def get_profile(uid):
     try:
         return get_db().table("profiles").select("id,full_name,email,role,is_active").eq("id", uid).single().execute().data
